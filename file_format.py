@@ -9,21 +9,24 @@ import pandas as pd
 from sys import argv
 import sqlalchemy as db
 import pandas as pd
+import os
+from dotenv import load_dotenv
 
 ############### conf ##############
 
+load_dotenv()
 passwords_crypt = []
 cache = open("cache.txt", "rb")
 crypt = cache.read()
 crypt = crypt.split(b"AES")
 num = -1
 #######################
-if len(argv) != 3 or argv[1] == "-h":
+if len(argv) != 2 or argv[1] == "-h":
     print("\n use ./file-format.py {FILE-NAME} {FILE-TYPE}")
     exit()
 
-name = argv[1]
-type = argv[2]
+name = os.getenv("FILE_NAME")
+type = argv[1]
 
 for passwd in crypt:
     passwd = b"AES" + passwd
@@ -47,8 +50,18 @@ elif type == "json":
     with open(name + '.json', 'w') as f:
         json.dump(data, f, indent=4)
 
+####################### SQL #############################
+
+
 elif type == "sql":
-    engine = db.create_engine('mysql://root:passwort@127.0.0.1/passwd')  # Create test.sqlite automatically
+
+    sql_type = os.getenv("SQL_TYPE")
+    sql_user = os.getenv("SQL_USER")
+    sql_passwd = os.getenv("SQL_PASSWD")
+    sql_ip = os.getenv("SQL_IP")
+    sql_table = os.getenv("SQL_TABLE")
+
+    engine = db.create_engine(sql_type+'://'+sql_user+':'+sql_passwd+'@'+sql_ip+'/'+sql_table)
     connection = engine.connect()
     metadata = db.MetaData()
 
