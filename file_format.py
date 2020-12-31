@@ -22,10 +22,10 @@ crypt = crypt.split(b"AES")
 num = -1
 #######################
 if len(argv) != 2 or argv[1] == "-h":
-    print("\n use ./file-format.py {FILE-NAME} {FILE-TYPE}")
+    print("\n use ./file-format.py {FILE-TYPE}")
     exit()
 
-name = os.getenv("FILE_NAME")
+name = os.getenv("PG_FILE_NAME")
 type = argv[1]
 
 for passwd in crypt:
@@ -55,11 +55,11 @@ elif type == "json":
 
 elif type == "sql":
 
-    sql_type = os.getenv("SQL_TYPE")
-    sql_user = os.getenv("SQL_USER")
-    sql_passwd = os.getenv("SQL_PASSWD")
-    sql_ip = os.getenv("SQL_IP")
-    sql_table = os.getenv("SQL_TABLE")
+    sql_type = os.getenv("PG_SQL_TYPE")
+    sql_user = os.getenv("PG_SQL_USER")
+    sql_passwd = os.getenv("PG_SQL_PASSWD")
+    sql_ip = os.getenv("PG_SQL_IP")
+    sql_table = os.getenv("PG_SQL_TABLE")
 
     engine = db.create_engine(sql_type+'://'+sql_user+':'+sql_passwd+'@'+sql_ip+'/'+sql_table)
     connection = engine.connect()
