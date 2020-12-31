@@ -13,7 +13,7 @@ bufferSize = 64 * 1024
 # check if all parameters set correct
 if len(argv) != 3 or argv[1] == "-h" or argv[2] == "-h":
     print(
-        "\n use ./decrypt.py {KEY} and \n -a(ll) to show all passwds in encode text and decode \n use -q(uick) to only show passwds decoded\n")
+        "\n use ./decrypt.py {KEY} and \n -a(ll) to show all passwds in encode text and decode \n use -q(uick) to only show passwds decoded \n use -n(um) to decoded a password by passwdid\n")
     exit()
 
 key = argv[1]
