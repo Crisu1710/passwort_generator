@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-########## import ############
+# ------------ import ------------
 import pyAesCrypt
 import io
 import sqlalchemy as db
@@ -9,7 +9,7 @@ from sys import argv
 import os
 from dotenv import load_dotenv
 
-############### conf ##############
+# ------------ conf ------------
 passwords_crypt = []
 passwords_decrypt = []
 bufferSize = 64 * 1024
@@ -17,14 +17,15 @@ load_dotenv()
 # check if all parameters set correct
 if len(argv) != 3 or argv[1] == "-h" or argv[2] == "-h":
     print(
-        "\n use ./decrypt.py {KEY} and \n -a(ll) to show all passwds in encode text and decode \n use -q(uick) to only show passwds decoded \n use -n(um) to decoded a password by passwdid\n")
+        "\n use ./decrypt.py {KEY} and \n\n -a(ll) to show all passwds in encode text and decode \n -q(uick) to "
+        "only show passwds decoded \n -n(um) to decoded a password by passwdid\n")
     exit()
 
 key = argv[1]
 mode = argv[2]
 num = 0
 pwid = 1
-########## import and decrypt file #############
+# ------------ import and decrypt file ------------
 
 if os.getenv("PG_DECRYPT_TYPE") == "db":  # get env PG_FILE_NAME (ste to db to decrypt the db)
     print("please wait ...")
@@ -37,7 +38,7 @@ if os.getenv("PG_DECRYPT_TYPE") == "db":  # get env PG_FILE_NAME (ste to db to d
     engine = db.create_engine(sql_type+'://'+sql_user+':'+sql_passwd+'@'+sql_ip+'/'+sql_table)  # SQL URL
     connection = engine.connect()
 
-    df = pd.read_sql_table('passwd', connection)  #read table
+    df = pd.read_sql_table('passwd', connection)  # read table
     crypt = df.passwd
 
 else:

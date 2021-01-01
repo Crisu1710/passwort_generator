@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 
-########## import ############
+# ------------ import ------------
 
 import json
-import pyAesCrypt
-import io
 from sys import argv
 import sqlalchemy as db
 import pandas as pd
 import os
 from dotenv import load_dotenv
 
-############### conf ##############
+# ------------ conf ------------
 
 load_dotenv()
 passwords_crypt = []
@@ -20,26 +18,26 @@ crypt = cache.read()
 crypt = crypt.split(b"AES")
 num = -1
 
-#######################
+# ------------
 if len(argv) != 2 or argv[1] == "-h":
     print("\n use ./file-format.py {FILE-TYPE}")
     exit()
 
 name = os.getenv("PG_FILE_NAME")
-type = argv[1]
+filetype = argv[1]
 
 for passwd in crypt:
     passwd = b"AES" + passwd
     passwords_crypt.append(passwd)
 
-############################### CSV ########################
-if type == "csv":
-    dict = {'name': "Name", 'PW': passwords_crypt}
-    df = pd.DataFrame(dict)
+# ------------ CSV ------------
+if filetype == "csv":
+    csv_dict = {'name': "Name", 'PW': passwords_crypt}
+    df = pd.DataFrame(csv_dict)
     df.to_csv(name + '.csv')
 
-############################# JSON ##############################
-elif type == "json":
+# ------------ JSON ------------
+elif filetype == "json":
     data = {}
     for passwd in passwords_crypt:
         num = num + 1
@@ -52,7 +50,7 @@ elif type == "json":
     with open(name + '.json', 'w') as f:
         json.dump(data, f, indent=4)
 
-####################### SQL #############################
+# ------------ SQL ------------
 elif type == "sql":
 
     sql_type = os.getenv("PG_SQL_TYPE")
