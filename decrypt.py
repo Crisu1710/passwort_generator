@@ -26,7 +26,7 @@ num = 0
 pwid = 1
 ########## import and decrypt file #############
 
-if os.getenv("PG_DECRYPT_FILE") == "db":  # get env PG_FILE_NAME (ste to db to decrypt the db)
+if os.getenv("PG_DECRYPT_TYPE") == "db":  # get env PG_FILE_NAME (ste to db to decrypt the db)
     print("please wait ...")
     sql_type = os.getenv("PG_SQL_TYPE")
     sql_user = os.getenv("PG_SQL_USER")
@@ -34,10 +34,10 @@ if os.getenv("PG_DECRYPT_FILE") == "db":  # get env PG_FILE_NAME (ste to db to d
     sql_ip = os.getenv("PG_SQL_IP")
     sql_table = os.getenv("PG_SQL_TABLE")
 
-    engine = db.create_engine(sql_type+'://'+sql_user+':'+sql_passwd+'@'+sql_ip+'/'+sql_table)
+    engine = db.create_engine(sql_type+'://'+sql_user+':'+sql_passwd+'@'+sql_ip+'/'+sql_table)  # SQL URL
     connection = engine.connect()
 
-    df = pd.read_sql_table('passwd', connection)
+    df = pd.read_sql_table('passwd', connection)  #read table
     crypt = df.passwd
 
 else:
@@ -47,7 +47,7 @@ else:
 
 
 for passwd in crypt:
-    if os.getenv("PG_DECRYPT_FILE") != "db":
+    if os.getenv("PG_DECRYPT_TYPE") != "db":
         passwd = b"AES" + passwd  # add the AES back again, to get accepted value
     if mode == "-a":
         print(passwd)  # list all encrypted passwords if parameter is -a

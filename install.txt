@@ -1,0 +1,6 @@
+#pip install -r install.txt
+
+pyAesCrypt
+pandas
+mysql-connector-python
+python-dotenv
