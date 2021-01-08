@@ -4,3 +4,4 @@ pyAesCrypt
 pandas
 mysql-connector-python
 python-dotenv
+sqlalchemy
