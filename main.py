@@ -13,13 +13,15 @@ import pandas as pd
 import json
 
 # ------------ conf ------------
-lower = "abcdefghijklmnopqrstuvwxyz"
-upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-numbers = "0123456789"
-symbols = "[]{}()#*~.:;<>-_€§$&?+^"
-main_pool = lower + upper + numbers + symbols
+components = {
+    "lower": "abcdefghijklmnopqrstuvwxyz",
+    "upper": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    "numbers": "0123456789",
+    "symbols": "[]{}()#*~.:;<>-_€§$&?+^"
+}
+pool = components["lower"] + components["upper"] + components["numbers"] + components["symbols"]
 
-main_buffer_size = 64 * 1024
+buffer_size = 64 * 1024
 load_dotenv()
 
 file = open("cache.txt", "a")
@@ -33,21 +35,22 @@ else:
     file_type = ""
 
 if os.getenv("PG_DECRYPT_TYPE") == "db" or file_type == "sql":
-    sql_type = os.getenv("PG_SQL_TYPE")
-    sql_user = os.getenv("PG_SQL_USER")
-    sql_passwd = os.getenv("PG_SQL_PASSWD")
-    sql_ip = os.getenv("PG_SQL_IP")
-    sql_table = os.getenv("PG_SQL_TABLE")
-
-    engine = db.create_engine(sql_type + '://' + sql_user + ':' + sql_passwd + '@' + sql_ip + '/' + sql_table)
-    db_connection = engine.connect()
+    sql = {
+        "type": os.getenv("PG_SQL_TYPE"),
+        "user": os.getenv("PG_SQL_USER"),
+        "passwd": os.getenv("PG_SQL_PASSWD"),
+        "ip": os.getenv("PG_SQL_IP"),
+        "table": os.getenv("PG_SQL_TABLE")
+    }
+    engine = db.create_engine(sql["type"] + '://' + sql["user"] + ':' + sql["passwd"] + '@' + sql["ip"] + '/' + sql["table"])
+    connection = engine.connect()
 else:
     db_connection = ""
     pass
 
 
 # ------------ import and decrypt file ------------
-def decrypt(key, buffer_size, connection):
+def decrypt(key):
     passwords_decrypt = []
     print("reading cache")
     if os.getenv("PG_DECRYPT_TYPE") == "db":  # get env PG_FILE_NAME (ste to db to decrypt the db)
@@ -72,8 +75,8 @@ def decrypt(key, buffer_size, connection):
 
 
 # ------------ gen ------------
-def gen(key, amount, length, pool, buffer_size, connection):
-    passwords_decrypt = decrypt(key, buffer_size, connection)
+def gen(key, amount, length):
+    passwords_decrypt = decrypt(key)
     passwords = []
     while len(passwords) < amount:  # as long as the existing passwords are less than the desired amount generate new
         passwd = "".join(random.sample(pool, length))
@@ -86,8 +89,8 @@ def gen(key, amount, length, pool, buffer_size, connection):
 
 
 # ------------ encrypt ------------
-def crypt(key, amount, length, pool, buffer_size, connection):
-    passwords = gen(key, amount, length, pool, buffer_size, connection)
+def crypt(key, amount, length):
+    passwords = gen(key, amount, length)
     cache = open("cache.txt", "ab")
     print("encrypting ...")
     for passwd in passwords:
@@ -101,8 +104,8 @@ def crypt(key, amount, length, pool, buffer_size, connection):
 
 
 # ------------ get/decrypt ------------
-def get(key, buffer_size, mode, connection):
-    passwords, get_cache = decrypt(key, buffer_size, connection)
+def get(key, mode):
+    passwords, get_cache = decrypt(key)
     pwid = 1
     pw_num = 0
     if mode == "-q":
@@ -118,8 +121,8 @@ def get(key, buffer_size, mode, connection):
 
 
 # ------------ converter ------------
-def converter(key, buffer_size, filetype, connection):
-    passwords_decrypt, get_cache = decrypt(key, buffer_size, connection)
+def converter(filetype):
+    passwords_decrypt, get_cache = decrypt("")
     name = os.getenv("PG_FILE_NAME")
     num = -1
     if filetype == "csv":
@@ -165,11 +168,11 @@ def converter(key, buffer_size, filetype, connection):
 
 # ------------ MAIN ------------
 if do == "gen":
-    crypt(argv[2], int(argv[4]), int(argv[3]), main_pool, main_buffer_size, db_connection)
+    crypt(argv[2], int(argv[4]), int(argv[3]))
 elif do == "get":
-    get(argv[2], main_buffer_size, argv[3], db_connection)
+    get(argv[2], argv[3])
 elif do == "con":
-    converter("", main_buffer_size, argv[2], db_connection)
+    converter(argv[2])
 else:
     print("\n use main.py {gen|get|con} OPTION "
           "\n"
