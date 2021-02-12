@@ -15,18 +15,19 @@ import json
 # ------------ conf ------------
 lower = "abcdefghijklmnopqrstuvwxyz"
 upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-num = "0123456789"
+numbers = "0123456789"
 symbols = "[]{}()#*~.:;<>-_€§$&?+^"
-main_pool = lower + upper + num + symbols
+main_pool = lower + upper + numbers + symbols
 
 main_buffer_size = 64 * 1024
-
 load_dotenv()
 
 file = open("cache.txt", "a")
 file.close()
 
-if argv[1] == "con" and argv[2] == "sql":
+do = argv[1]
+
+if do == "con" and argv[2] == "sql":
     file_type = "sql"
 else:
     file_type = ""
@@ -50,7 +51,6 @@ def decrypt(key, buffer_size, connection):
     passwords_decrypt = []
     print("reading cache")
     if os.getenv("PG_DECRYPT_TYPE") == "db":  # get env PG_FILE_NAME (ste to db to decrypt the db)
-
         df = pd.read_sql_table('passwd', connection)  # read table
         get_cache = df.passwd
     else:
@@ -164,16 +164,18 @@ def converter(key, buffer_size, filetype, connection):
 
 
 # ------------ MAIN ------------
-if argv[1] == "gen":
+if do == "gen":
     crypt(argv[2], int(argv[4]), int(argv[3]), main_pool, main_buffer_size, db_connection)
-elif argv[1] == "get":
-    get(argv[2], main_buffer_size, "-q", db_connection)
-elif argv[1] == "con":
+elif do == "get":
+    get(argv[2], main_buffer_size, argv[3], db_connection)
+elif do == "con":
     converter("", main_buffer_size, argv[2], db_connection)
 else:
-    print("\n use main.py {gen|get|con} "
-          "\n gen - {KEY} int(password length) int(password amount) "
-          "\n get - {KEY} "
-          "\n con - {csv|json|sql}"
+    print("\n use main.py {gen|get|con} OPTION "
+          "\n"
+          "\n DO    Options: "
+          "\n gen - {KEY} int(password length) int(password amount) > ./main.py pass123 15 4"
+          "\n get - {KEY} {-a|-q}                                   > ./main.py pass123 -q"
+          "\n con - {csv|json|sql}                                  > ./main.py json"
           "\n")
     exit()
