@@ -35,7 +35,8 @@ if os.getenv("PG_DECRYPT_TYPE") == "db":  # get env PG_FILE_NAME (ste to db to d
     sql_ip = os.getenv("PG_SQL_IP")
     sql_table = os.getenv("PG_SQL_TABLE")
 
-    engine = db.create_engine(sql_type+'://'+sql_user+':'+sql_passwd+'@'+sql_ip+'/'+sql_table)  # SQL URL
+    engine = db.create_engine(
+        sql_type + '://' + sql_user + ':' + sql_passwd + '@' + sql_ip + '/' + sql_table)  # SQL URL
     connection = engine.connect()
 
     df = pd.read_sql_table('passwd', connection)  # read table
@@ -45,7 +46,6 @@ else:
     in_cache = open("cache.txt", "rb")
     crypt = in_cache.read()
     crypt = crypt.split(b"AES")  # split binary at AES (start) to get all encrypted passwords
-
 
 for passwd in crypt:
     if os.getenv("PG_DECRYPT_TYPE") != "db":
@@ -69,17 +69,20 @@ for passwd in crypt:
             continue
 
 if mode == "-a" or mode == "-n":  # decrypt all passwords with correct key (number mode)
-    passid = input("ID: (max:"+str(num-1)+"): ") or num-1
+    passid = input("ID: (max:" + str(num - 1) + "): ") or num - 1
     passwd = b"AES" + crypt[int(passid)]  # add the AES back again, to get accepted value
     fCiph = io.BytesIO(passwd)
     fDec = io.BytesIO()
     ctlen = len(passwd)
     fCiph.seek(0)
     pyAesCrypt.decryptStream(fCiph, fDec, key, bufferSize, ctlen)
-    print("PASSWD ID:("+str(passid)+"):\n" + str(fDec.getvalue().decode("utf-8")))
+    print("PASSWD ID:(" + str(passid) + "):\n" + str(fDec.getvalue().decode("utf-8")))
 else:
     if len(passwords_decrypt) == 0:
         print("wrong KEY")
     else:
+        # csv_dict = {'name': "Name", 'PW': passwords_decrypt}
+        # df = pd.DataFrame(csv_dict)
+        # df.to_csv('passwd.csv')
         for passwd in passwords_decrypt:
             print(passwd)
