@@ -26,7 +26,12 @@ load_dotenv()
 file = open("cache.txt", "a")
 file.close()
 
-if os.getenv("PG_DECRYPT_TYPE") == "db":
+if argv[1] == "con" and argv[2] == "sql":
+    file_type = "sql"
+else:
+    file_type = ""
+
+if os.getenv("PG_DECRYPT_TYPE") == "db" or file_type == "sql":
     sql_type = os.getenv("PG_SQL_TYPE")
     sql_user = os.getenv("PG_SQL_USER")
     sql_passwd = os.getenv("PG_SQL_PASSWD")
@@ -116,7 +121,7 @@ def get(key, buffer_size, mode, connection):
 def converter(key, buffer_size, filetype, connection):
     passwords_decrypt, get_cache = decrypt(key, buffer_size, connection)
     name = os.getenv("PG_FILE_NAME")
-
+    num = -1
     if filetype == "csv":
         csv_dict = {'name': "Name", 'PW': get_cache}
         df = pd.DataFrame(csv_dict)
@@ -164,8 +169,11 @@ if argv[1] == "gen":
 elif argv[1] == "get":
     get(argv[2], main_buffer_size, "-q", db_connection)
 elif argv[1] == "con":
-    converter(argv[2], main_buffer_size, "csv", db_connection)
+    converter("", main_buffer_size, argv[2], db_connection)
 else:
-    print("\n use old_main.py {KEY} int(password length) int(password amount) "
-          "\n example: ./old_main.py save_word 4 2 \n")
+    print("\n use main.py {gen|get|con} "
+          "\n gen - {KEY} int(password length) int(password amount) "
+          "\n get - {KEY} "
+          "\n con - {csv|json|sql}"
+          "\n")
     exit()
