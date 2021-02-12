@@ -10,6 +10,7 @@ import os
 from dotenv import load_dotenv
 import sqlalchemy as db
 import pandas as pd
+import json
 
 # ------------ conf ------------
 lower = "abcdefghijklmnopqrstuvwxyz"
@@ -111,11 +112,59 @@ def get(key, buffer_size, mode, connection):
             pw_num = pw_num + 1
 
 
+# ------------ converter ------------
+def converter(key, buffer_size, filetype, connection):
+    passwords_decrypt, get_cache = decrypt(key, buffer_size, connection)
+    name = os.getenv("PG_FILE_NAME")
+
+    if filetype == "csv":
+        csv_dict = {'name': "Name", 'PW': get_cache}
+        df = pd.DataFrame(csv_dict)
+        df.to_csv(name + '.csv')
+
+    # ------------ JSON ------------
+    elif filetype == "json":
+        data = {}
+        for passwd in get_cache:
+            num = num + 1
+            x = str(passwd)
+            y = "name"
+            data[num] = {
+                "passwd": x,
+                "name": y,
+            }
+        with open(name + '.json', 'w') as f:
+            json.dump(data, f, indent=4)
+
+    # ------------ SQL ------------
+    elif filetype == "sql":
+        metadata = db.MetaData()
+
+        passwd = db.Table('passwd', metadata,
+                          db.Column('id', db.Integer, autoincrement=True, primary_key=True),
+                          db.Column('passid', db.String(255), nullable=False),
+                          db.Column('passwd', db.LargeBinary(), nullable=False)
+                          )
+        metadata.create_all(engine)  # Creates the table
+
+        for passwds in get_cache:
+            num = num + 1
+            # Inserting record one by one
+            query = db.insert(passwd).values(passid=num, passwd=passwds)
+            ResultProxy = connection.execute(query)
+            results = connection.execute(db.select([passwd])).fetchall()
+            df = pd.DataFrame(results)
+            df.columns = results[0].keys()
+            df.head(4)
+
+
 # ------------ MAIN ------------
 if argv[1] == "gen":
     crypt(argv[2], int(argv[4]), int(argv[3]), main_pool, main_buffer_size, db_connection)
 elif argv[1] == "get":
     get(argv[2], main_buffer_size, "-q", db_connection)
+elif argv[1] == "con":
+    converter(argv[2], main_buffer_size, "csv", db_connection)
 else:
     print("\n use old_main.py {KEY} int(password length) int(password amount) "
           "\n example: ./old_main.py save_word 4 2 \n")
