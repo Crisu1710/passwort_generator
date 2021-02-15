@@ -13,13 +13,12 @@ import pandas as pd
 import json
 
 # ------------ conf ------------
-components = {
+pool = {
     "lower": "abcdefghijklmnopqrstuvwxyz",
     "upper": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
     "numbers": "0123456789",
     "symbols": "[]{}()#*~.:;<>-_€§$&?+^"
 }
-pool = components["lower"] + components["upper"] + components["numbers"] + components["symbols"]
 
 buffer_size = 64 * 1024
 load_dotenv()
@@ -42,7 +41,8 @@ if os.getenv("PG_DECRYPT_TYPE") == "db" or file_type == "sql":  # set correct va
         "ip": os.getenv("PG_SQL_IP"),
         "table": os.getenv("PG_SQL_TABLE")
     }
-    engine = db.create_engine(sql["type"] + '://' + sql["user"] + ':' + sql["passwd"] + '@' + sql["ip"] + '/' + sql["table"])
+    engine = db.create_engine(
+        sql["type"] + '://' + sql["user"] + ':' + sql["passwd"] + '@' + sql["ip"] + '/' + sql["table"])
     connection = engine.connect()
 else:
     db_connection = ""
@@ -80,7 +80,7 @@ def gen(key, amount, length):
     passwords_decrypt = decrypt(key)
     passwords = []
     while len(passwords) < amount:  # as long as the existing passwords are less than the desired amount generate new
-        passwd = "".join(random.sample(pool, length))  # generate random password from pool
+        passwd = "".join(random.sample("".join(pool.values()), length))  # generate random password from pool
         if passwd not in passwords and passwd not in passwords_decrypt:  # check if password is already created
             passwords.append(passwd)  # add password to array "passwords" if not already created
         else:
@@ -119,6 +119,19 @@ def get(key, mode):
             print("ID: " + str(pw_num) + "  ^^^^------------------------------> " + password +
                   " <----------------------------------\n")
             pw_num = pw_num + 1
+
+
+# ------------ add ------------
+def add(key, add_password):
+    cache = open("cache.txt", "ab")
+    print("encrypting ...")
+    fCiph = io.BytesIO()
+    pbdata = add_password.encode("utf-8")
+    fIn = io.BytesIO(pbdata)
+    pyAesCrypt.encryptStream(fIn, fCiph, key, buffer_size)
+    cryptpw = fCiph.getvalue()
+    cache.write(cryptpw)
+    cache.close()
 
 
 # ------------ converter ------------
@@ -171,6 +184,8 @@ if do == "gen":
     crypt(argv[2], int(argv[4]), int(argv[3]))
 elif do == "get":
     get(argv[2], argv[3])
+elif do == "add":
+    add(argv[2], argv[3])
 elif do == "con":
     converter(argv[2])
 else:
@@ -179,6 +194,7 @@ else:
           "\n DO    Options: "
           "\n gen - {KEY} int(password length) int(password amount) > ./main.py pass123 15 4"
           "\n get - {KEY} {-a|-q}                                   > ./main.py pass123 -q"
+          "\n add - {KEY} {passwd to add}                           > ./main.py pass123 MyPasswd!1"
           "\n con - {csv|json|sql}                                  > ./main.py json"
           "\n")
     exit()
