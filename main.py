@@ -34,7 +34,7 @@ if do == "con" and argv[2] == "sql":
 else:
     file_type = ""
 
-if os.getenv("PG_DECRYPT_TYPE") == "db" or file_type == "sql":
+if os.getenv("PG_DECRYPT_TYPE") == "db" or file_type == "sql":  # set correct values in .env to use
     sql = {
         "type": os.getenv("PG_SQL_TYPE"),
         "user": os.getenv("PG_SQL_USER"),
@@ -51,24 +51,25 @@ else:
 
 # ------------ import and decrypt file ------------
 def decrypt(key):
-    passwords_decrypt = []
+    passwords_decrypt = []  # set passwords_decrypt to null
     print("reading cache")
-    if os.getenv("PG_DECRYPT_TYPE") == "db":  # get env PG_FILE_NAME (ste to db to decrypt the db)
+    if os.getenv("PG_DECRYPT_TYPE") == "db":  # get env PG_FILE_NAME (ste to "db" to decrypt the DB)
         df = pd.read_sql_table('passwd', connection)  # read table
-        get_cache = df.passwd
+        get_cache = df.passwd  # get all encrypted passwords from the DB
     else:
-        get_cache = open("cache.txt", "rb")
+        get_cache = open("cache.txt", "rb")  # open the text file
         get_cache = get_cache.read()
-        get_cache = get_cache.split(b"AES")
+        get_cache = get_cache.split(b"AES")  # split at b"AES" to find the start of one encrypted password
     for passwd in get_cache:
-        passwd = b"AES" + passwd
+        if os.getenv("PG_DECRYPT_TYPE") != "db":
+            passwd = b"AES" + passwd
         try:
             fCiph: BytesIO = io.BytesIO(passwd)
             fDec = io.BytesIO()
             ctlen = len(passwd)
             fCiph.seek(0)
             pyAesCrypt.decryptStream(fCiph, fDec, key, buffer_size, ctlen)
-            passwords_decrypt.append(str(fDec.getvalue().decode("utf-8")))
+            passwords_decrypt.append(str(fDec.getvalue().decode("utf-8")))  # decrypt password and add it to array
         finally:
             continue
     return passwords_decrypt, get_cache
@@ -79,9 +80,9 @@ def gen(key, amount, length):
     passwords_decrypt = decrypt(key)
     passwords = []
     while len(passwords) < amount:  # as long as the existing passwords are less than the desired amount generate new
-        passwd = "".join(random.sample(pool, length))
+        passwd = "".join(random.sample(pool, length))  # generate random password from pool
         if passwd not in passwords and passwd not in passwords_decrypt:  # check if password is already created
-            passwords.append(passwd)  # add password to array
+            passwords.append(passwd)  # add password to array "passwords" if not already created
         else:
             continue
     print(str(len(passwords)) + " passwords created")
@@ -125,13 +126,13 @@ def converter(filetype):
     passwords_decrypt, get_cache = decrypt("")
     name = os.getenv("PG_FILE_NAME")
     num = -1
-    if filetype == "csv":
+    if filetype == "csv":  # convert to csv
         csv_dict = {'name': "Name", 'PW': get_cache}
         df = pd.DataFrame(csv_dict)
         df.to_csv(name + '.csv')
 
     # ------------ JSON ------------
-    elif filetype == "json":
+    elif filetype == "json":  # convert to json
         data = {}
         for passwd in get_cache:
             num = num + 1
@@ -145,9 +146,8 @@ def converter(filetype):
             json.dump(data, f, indent=4)
 
     # ------------ SQL ------------
-    elif filetype == "sql":
+    elif filetype == "sql":  # convert to sql set correct values in .env to use
         metadata = db.MetaData()
-
         passwd = db.Table('passwd', metadata,
                           db.Column('id', db.Integer, autoincrement=True, primary_key=True),
                           db.Column('passid', db.String(255), nullable=False),
