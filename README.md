@@ -8,20 +8,14 @@
 
 ### Use
 
-``` ./gen.py <KEY> <PASSWORD_LENGTH> <PASSWORD_AMOUNT> ``` <br><br>
-``` ./file_format.py <TYPE> ``` Copies the data in cache.txt to one of these fromates and save them <br>
+``` 
+use main.py {gen|get|con} OPTION
 
-TYPES: <br>
-sql <br>
-csv <br>
-json <br>
-
-``` ./decrypt.py <KEY> <PARAMETER> ``` <br>
-
-PARAMETERS <br>
--a(ll) to show all passwds in encoded text and decode <br>
--q(uick) to only show passwds decoded <br>
--n(um) to decode a password by password_ID
+DO    Options:
+gen - {KEY} int(password length) int(password amount) > ./main.py pass123 15 4
+get - {KEY} {-a|-q}                                   > ./main.py pass123 -q
+con - {csv|json|sql}                                  > ./main.py json"
+```
 
 ### .env
 
